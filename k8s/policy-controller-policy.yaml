@@ -1,0 +1,21 @@
+apiVersion: policy.sigstore.dev/v1beta1
+kind: ClusterImagePolicy
+metadata:
+  name: api-pagamentos-policy
+spec:
+  images:
+    - glob: "ghcr.io/NoxMundus/api-pagamentos**"
+  authorities:
+    - name: keyless-github-actions
+      keyless:
+        url: https://fulcio.sigstore.dev
+        identities:
+          - issuer: https://token.actions.githubusercontent.com
+            subjectRegExp: "^https://github.com/NoxMundus/api-pagamentos/.*"
+      ctlog:
+        url: https://rekor.sigstore.dev
+      attestations:
+        - name: must-have-sbom
+          predicateType: https://cyclonedx.org/bom
+        - name: must-have-provenance
+          predicateType: https://slsa.dev/provenance/v1

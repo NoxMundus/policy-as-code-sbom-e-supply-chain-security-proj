@@ -1,0 +1,16 @@
+{
+  "name": "api-pagamentos",
+  "version": "1.0.0",
+  "description": "API ficticia de pagamentos para laboratorio DevSecOps de compliance continuo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "express": "4.21.2",
+    "helmet": "7.2.0"
+  },
+  "devDependencies": {}
+}
+

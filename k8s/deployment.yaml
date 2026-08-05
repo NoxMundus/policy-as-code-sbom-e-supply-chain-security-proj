@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-pagamentos
+  namespace: producao
+  labels:
+    app: api-pagamentos
+    owner: plataforma
+    compliance: supply-chain
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-pagamentos
+  template:
+    metadata:
+      labels:
+        app: api-pagamentos
+        owner: plataforma
+        compliance: supply-chain
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: ghcr.io/NoxMundus/api-pagamentos:v1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 3000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 20

@@ -1,0 +1,12 @@
+.git
+.github
+node_modules
+app/node_modules
+relatorios
+evidence
+*.log
+README.md
+dashboards
+policies
+scripts
+k8s
