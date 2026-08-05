@@ -16,10 +16,14 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       digest: ${{ steps.build.outputs.digest }}
-      image: ghcr.io/${{ github.repository }}
+      image: ghcr.io/${{ steps.repo.outputs.name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Compute lowercase repository name
+        id: repo
+        run: echo "name=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -37,7 +41,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          tags: ghcr.io/${{ steps.repo.outputs.name }}:${{ github.ref_name }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -48,7 +52,7 @@ jobs:
 
       - name: Generate SBOM CycloneDX and SPDX
         env:
-          IMAGE: ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
+          IMAGE: ghcr.io/${{ steps.repo.outputs.name }}@${{ steps.build.outputs.digest }}
         run: |
           mkdir -p evidence/sbom
           syft "$IMAGE" -o cyclonedx-json=evidence/sbom/sbom.cdx.json -o spdx-json=evidence/sbom/sbom.spdx.json
@@ -75,7 +79,7 @@ jobs:
       - name: Sign image keyless
         env:
           DIGEST: ${{ steps.build.outputs.digest }}
-        run: cosign sign --yes "ghcr.io/${{ github.repository }}@$DIGEST"
+        run: cosign sign --yes "ghcr.io/${{ steps.repo.outputs.name }}@$DIGEST"
 
       - name: Attach CycloneDX SBOM attestation
         env:
@@ -84,7 +88,7 @@ jobs:
           cosign attest --yes \
             --predicate evidence/sbom/sbom.cdx.json \
             --type https://cyclonedx.org/bom \
-            "ghcr.io/${{ github.repository }}@$DIGEST"
+            "ghcr.io/${{ steps.repo.outputs.name }}@$DIGEST"
 
       - name: Attach vulnerability scan attestation
         env:
@@ -93,13 +97,13 @@ jobs:
           cosign attest --yes \
             --predicate evidence/grype-report.json \
             --type vuln \
-            "ghcr.io/${{ github.repository }}@$DIGEST"
+            "ghcr.io/${{ steps.repo.outputs.name }}@$DIGEST"
 
       - name: Verify signature in pipeline
         env:
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
-          cosign verify "ghcr.io/${{ github.repository }}@$DIGEST" \
+          cosign verify "ghcr.io/${{ steps.repo.outputs.name }}@$DIGEST" \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
             --certificate-identity-regexp "^https://github.com/${{ github.repository }}/.*" \
             | tee evidence/cosign-verify.json
