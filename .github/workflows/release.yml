@@ -68,6 +68,9 @@ jobs:
           DT_PROJECT_VERSION: ${{ github.ref_name }}
         run: python scripts/consulta_dt.py evidence/sbom/sbom.cdx.json | tee evidence/dependency-track.log
 
+      - name: Install Grype
+        run: curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+
       - name: Grype vulnerability scan
         run: |
           grype sbom:evidence/sbom/sbom.cdx.json -o json > evidence/grype-report.json
