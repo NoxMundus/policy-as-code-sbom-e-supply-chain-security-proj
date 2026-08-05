@@ -1,0 +1,3 @@
+ignore:
+  - vulnerability: CVE-2025-60876
+    reason: "Sem correcao publicada pela Alpine no momento do scan. Reavaliar a cada execucao do pipeline. Risco aceito temporariamente - pacote busybox/ssl_client da imagem base, nao acessivel via superficie de ataque da aplicacao (nao exposto por HTTP)."
