@@ -1,0 +1,70 @@
+name: verify
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  policy-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install app dependencies
+        working-directory: app
+        run: npm ci
+
+      - name: Unit tests
+        working-directory: app
+        run: npm test
+
+      - name: Install OPA
+        uses: open-policy-agent/setup-opa@v2
+        with:
+          version: latest
+
+      - name: OPA tests
+        run: opa test policies/
+
+      - name: Docker build local
+        run: docker build -t api-pagamentos:ci .
+
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@v0
+
+      - name: Generate SBOM CycloneDX and SPDX
+        run: |
+          mkdir -p evidence/sbom
+          syft api-pagamentos:ci -o cyclonedx-json=evidence/sbom/sbom.cdx.json -o spdx-json=evidence/sbom/sbom.spdx.json
+
+      - name: CycloneDX analyze evidence
+        run: bash scripts/cyclonedx_analyze.sh evidence/sbom/sbom.cdx.json evidence/cyclonedx-analyze.log
+
+      - name: Validate license allowlist
+        run: python scripts/valida_licencas_sbom.py evidence/sbom/sbom.cdx.json
+
+      - name: Dependency-Track mock submission
+        run: python scripts/consulta_dt.py evidence/sbom/sbom.cdx.json | tee evidence/dependency-track.log
+
+      - name: Grype scan
+        run: |
+          grype sbom:evidence/sbom/sbom.cdx.json -o json > evidence/grype-report.json
+
+      - name: Upload verification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-evidence
+          path: evidence/

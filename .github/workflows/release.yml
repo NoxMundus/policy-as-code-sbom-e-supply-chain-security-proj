@@ -58,7 +58,7 @@ jobs:
           syft "$IMAGE" -o cyclonedx-json=evidence/sbom/sbom.cdx.json -o spdx-json=evidence/sbom/sbom.spdx.json
 
       - name: CycloneDX analyze evidence
-        run: ./scripts/cyclonedx_analyze.sh evidence/sbom/sbom.cdx.json evidence/cyclonedx-analyze.log
+        run: bash scripts/cyclonedx_analyze.sh evidence/sbom/sbom.cdx.json evidence/cyclonedx-analyze.log
 
       - name: Validate license allowlist
         run: python scripts/valida_licencas_sbom.py evidence/sbom/sbom.cdx.json
