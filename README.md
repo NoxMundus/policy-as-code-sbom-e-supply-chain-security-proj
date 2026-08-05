@@ -68,16 +68,16 @@ git push origin v1.0.0
 
 \`\`\`bash
 export GH_USER="NoxMundus"
-export REPO_NAME="api-pagamentos"
-export IMAGE="ghcr.io/$GH_USER/$REPO_NAME:v1.0.0"
+export REPO_NAME="policy-as-code-sbom-e-supply-chain-security-proj"
+export IMAGE="ghcr.io/$NoxMundus/$policy-as-code-sbom-e-supply-chain-security-proj:v1.0.0"
 
 cosign verify "$IMAGE" \\
-  --certificate-identity-regexp "^https://github.com/$GH_USER/$REPO_NAME/.*" \\
+  --certificate-identity-regexp "^https://github.com/$NoxMundus/$policy-as-code-sbom-e-supply-chain-security-proj/.*" \\
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 
 cosign verify-attestation "$IMAGE" \\
   --type slsaprovenance \\
-  --certificate-identity-regexp "^https://github.com/$GH_USER/$REPO_NAME/.*" \\
+  --certificate-identity-regexp "^https://github.com/$NoxMundus/$policy-as-code-sbom-e-supply-chain-security-proj/.*" \\
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 \`\`\`
 
